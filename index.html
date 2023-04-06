@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Webnotification Beispiel</title>
+    <script>
+      // Registrierung des Service Workers
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('service-worker.js')
+          .then(function(registration) {
+            console.log('Service worker registriert:', registration);
+          })
+          .catch(function(error) {
+            console.log('Service worker Registrierung fehlgeschlagen:', error);
+          });
+        });
+      }
+
+      // Webbenachrichtigung senden
+      function sendNotification() {
+        if (!('Notification' in window)) {
+          console.log('Webnotifications werden nicht unterstützt');
+          return;
+        }
+
+        Notification.requestPermission()
+        .then(function(permission) {
+          if (permission === 'granted') {
+            var notification = new Notification('Tada');
+          } else {
+            console.log('Webbenachrichtigungen nicht erlaubt');
+          }
+        });
+      }
+
+      // Timer starten
+      setInterval(function() {
+        sendNotification();
+      }, 300);
+    </script>
+  </head>
+  <body>
+    <h1>Webnotification Beispiel</h1>
+    <p>Dies ist ein Beispiel für eine HTML-Website, die alle 30 Sekunden ein Webbenachrichtigung mit dem Inhalt "Tada" sendet.</p>
+  </body>
+</html>
