@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -19,6 +18,8 @@
 
 <div class="calibrate-button">
   <button id="calibrateButton">Calibrate</button>
+  <button id="addPersonalGoodButton">Add personal Good</button>
+  <button id="addPersonalBadButton">Add personal Bad</button>
 </div>
 
 <div class="calibrated-values">
@@ -26,6 +27,8 @@
   <span id="calibrated-my-value">CMy: </span>
   <span id="calibrated-mz-value">CMz: </span>
 </div>
+
+
 
 <h1>Click CONNECT</h1>
 
@@ -65,8 +68,15 @@ button:hover {
 }
 
 </style>
-
 <script type="text/javascript">
+
+// Request notification permission when the page loads
+document.addEventListener('DOMContentLoaded', function () {
+  if ('Notification' in window) {
+    Notification.requestPermission();
+  }
+});
+
   var maxRecords = 64;
   var mxValue = 0;
   var myValue = 0;
@@ -75,7 +85,6 @@ button:hover {
   var calibratedMy = 0;
   var calibratedMz = 0;
   var NoteStatus = 0;
-  var previousNoteStatus = 0;
 
 var NiclaSenseME = {
     magnet:
@@ -200,62 +209,495 @@ function handleIncoming(sensor, dataReceived) {
     }  
   }
 
+function updateSensorValues(sensorData) {
+  mxValue = parseInt(sensorData['Mx'][sensorData['Mx'].length - 1]);
+  myValue = parseInt(sensorData['My'][sensorData['My'].length - 1]);
+  mzValue = parseInt(sensorData['Mz'][sensorData['Mz'].length - 1]);
+
+  const mxValueElement = document.getElementById('mx-value');
+  const myValueElement = document.getElementById('my-value');
+  const mzValueElement = document.getElementById('mz-value');
+
+  mxValueElement.textContent = `Mx: ${mxValue}`;
+  myValueElement.textContent = `My: ${myValue}`;
+  mzValueElement.textContent = `Mz: ${mzValue}`;
+
+}
+
+// UI elements for displaying calibrated values
+const calibratedMxElement = document.getElementById('calibrated-mx-value');
+const calibratedMyElement = document.getElementById('calibrated-my-value');
+const calibratedMzElement = document.getElementById('calibrated-mz-value');
+const calibrateButton = document.getElementById('calibrateButton');
+
+calibrateButton.addEventListener('click', function () {
+  // Store the current values as calibration values
+  calibratedMx = mxValue;
+  calibratedMy = myValue;
+  calibratedMz = mzValue;
+
+  // Display the calibrated values
+  calibratedMxElement.textContent = `Calibrated Mx: ${calibratedMx}`;
+  calibratedMyElement.textContent = `Calibrated My: ${calibratedMy}`;
+  calibratedMzElement.textContent = `Calibrated Mz: ${calibratedMz}`;
+});
+
+
+// Variable to store the previous notification message
+var previousNotificationMessage = '';
+
+function showNotification(message) {
+  // Check if notifications are supported
+  if ('Notification' in window) {
+    // Request permission if not granted
+    if (Notification.permission !== 'granted') {
+      Notification.requestPermission();
+    } else {
+      // Check if the new notification message is different from the previous one
+      if (message !== previousNotificationMessage) {
+        // Display the notification
+        new Notification('LEITZ Sensor', { body: message });
+
+        // Update the previousNotificationMessage
+        previousNotificationMessage = message;
+      }
+    }
+  } else {
+    console.warn('Notifications not supported in this browser.');
+  }
+}
+
+// Event listener for the "Add personal Good" button
+addPersonalGoodButton.addEventListener('click', function () {
+  // Assuming mxValue, myValue, mzValue are already defined and contain raw sensor values
+
+  // Calculate calibrated values
+  const calibratedMxValue = mxValue - calibratedMx;
+  const calibratedMyValue = myValue - calibratedMy;
+  const calibratedMzValue = mzValue - calibratedMz;
+
+  // Add a new point with type "Gut" and calibrated values to the list
+  punkteListe.push({
+    typ: "Gut",
+    mx: calibratedMxValue,
+    my: calibratedMyValue,
+    mz: calibratedMzValue
+  });
+
+  // Display the updated list in the console
+  console.log("Personal Good added. Updated punkteListe:", punkteListe);
+});
+
+// Event listener for the "Add personal Bad" button
+addPersonalBadButton.addEventListener('click', function () {
+  // Assuming mxValue, myValue, mzValue are already defined and contain raw sensor values
+
+  // Calculate calibrated values
+  const calibratedMxValue = mxValue - calibratedMx;
+  const calibratedMyValue = myValue - calibratedMy;
+  const calibratedMzValue = mzValue - calibratedMz;
+
+  // Add a new point with type "Gut" and calibrated values to the list
+  punkteListe.push({
+    typ: "Schlecht",
+    mx: calibratedMxValue,
+    my: calibratedMyValue,
+    mz: calibratedMzValue
+  });
+
+  // Display the updated list in the console
+  console.log("Personal Bad added. Updated punkteListe:", punkteListe);
+});
+
+
 // Liste von Punkten
 const punkteListe = [
-{ typ: "Gut", mx: -921, my: -377, mz: 481 },
-{ typ: "Gut", mx: -927, my: -377, mz: 481 },
-{ typ: "Gut", mx: -915, my: -383, mz: 499 },
-{ typ: "Gut", mx: -939, my: -400, mz: 493 },
-{ typ: "Gut", mx: -938, my: -377, mz: 499 },
-{ typ: "Gut", mx: -927, my: -389, mz: 493 },
-{ typ: "Gut", mx: -933, my: -383, mz: 487 },
-{ typ: "Gut", mx: -915, my: -377, mz: 481 },
-{ typ: "Gut", mx: -921, my: -377, mz: 506 },
-{ typ: "Gut", mx: -921, my: -383, mz: 475 },
-{ typ: "Gut", mx: -927, my: -394, mz: 437 },
-{ typ: "Gut", mx: -897, my: -377, mz: 443 },
-{ typ: "Gut", mx: -903, my: -313, mz: 468 },
-{ typ: "Gut", mx: -891, my: -377, mz: 475 },
-{ typ: "Gut", mx: -921, my: -360, mz: 512 },
-{ typ: "Gut", mx: -938, my: -353, mz: 518 },
-{ typ: "Gut", mx: -921, my: -365, mz: 505 },
-{ typ: "Gut", mx: -921, my: -335, mz: 499 },
-{ typ: "Gut", mx: -945, my: -383, mz: 530 },
-{ typ: "NichtErkannt", mx: 10, my: -23, mz: -17 },
-{ typ: "NichtErkannt", mx: 4, my: -5, mz: -24 },
-{ typ: "NichtErkannt", mx: 4, my: -5, mz: -35 },
-{ typ: "NichtErkannt", mx: 10, my: -11, mz: -24 },
-{ typ: "NichtErkannt", mx: 22, my: 6, mz: -24 },
-{ typ: "NichtErkannt", mx: -2, my: -5, mz: -24 },
-{ typ: "NichtErkannt", mx: -2, my: 0, mz: -43 },
-{ typ: "Schlecht", mx: -785, my: -170, mz: 437 },
-{ typ: "Schlecht", mx: -786, my: -170, mz: 443 },
-{ typ: "Schlecht", mx: -809, my: -182, mz: 449 },
-{ typ: "Schlecht", mx: -803, my: -188, mz: 449 },
-{ typ: "Schlecht", mx: -856, my: -282, mz: 406 },
-{ typ: "Schlecht", mx: -856, my: -400, mz: 363 },
-{ typ: "Schlecht", mx: -832, my: -430, mz: 319 },
-{ typ: "Schlecht", mx: -827, my: -406, mz: 338 },
-{ typ: "Schlecht", mx: -821, my: -418, mz: 313 },
-{ typ: "Schlecht", mx: -827, my: -424, mz: 332 },
-{ typ: "Schlecht", mx: -827, my: -412, mz: 338 },
-{ typ: "Schlecht", mx: -768, my: -229, mz: 362 },
-{ typ: "Schlecht", mx: -738, my: -224, mz: 350 },
-{ typ: "Schlecht", mx: -709, my: -212, mz: 381 },
-{ typ: "Schlecht", mx: -726, my: -200, mz: 344 },
-{ typ: "Schlecht", mx: -732, my: -206, mz: 369 },
-{ typ: "Schlecht", mx: -738, my: -195, mz: 356 },
-{ typ: "Schlecht", mx: -720, my: -218, mz: 357 },
-{ typ: "Schlecht", mx: -720, my: -206, mz: 375 },
-{ typ: "Schlecht", mx: -709, my: -200, mz: 375 },
-{ typ: "Schlecht", mx: -720, my: -212, mz: 375 },
-{ typ: "Schlecht", mx: -832, my: -224, mz: 506 },
-{ typ: "Schlecht", mx: -827, my: -171, mz: 661 },
-{ typ: "Schlecht", mx: -827, my: -176, mz: 661 },
-{ typ: "Schlecht", mx: -868, my: -188, mz: 667 },
-{ typ: "Schlecht", mx: -850, my: -206, mz: 524 },
-{ typ: "Schlecht", mx: -903, my: -247, mz: 543 },
-{ typ: "Schlecht", mx: -827, my: -200, mz: 574 }
+{ typ: "Gut", mx: 107, my: -26, mz: -69 },
+{ typ: "Gut", mx: 107, my: -26, mz: -70 },
+{ typ: "Gut", mx: 107, my: -26, mz: -69 },
+{ typ: "Gut", mx: 107, my: -26, mz: -70 },
+{ typ: "Gut", mx: 107, my: -26, mz: -69 },
+{ typ: "Gut", mx: 107, my: -25, mz: -70 },
+{ typ: "Gut", mx: 107, my: -26, mz: -70 },
+{ typ: "Gut", mx: 108, my: -26, mz: -70 },
+{ typ: "Gut", mx: 108, my: -26, mz: -71 },
+{ typ: "Gut", mx: 107, my: -26, mz: -70 },
+{ typ: "Gut", mx: 107, my: -26, mz: -70 },
+{ typ: "Gut", mx: 107, my: -26, mz: -69 },
+{ typ: "Gut", mx: 107, my: -26, mz: -69 },
+{ typ: "Gut", mx: 107, my: -26, mz: -69 },
+{ typ: "Gut", mx: 107, my: -26, mz: -70 },
+{ typ: "Gut", mx: 107, my: -25, mz: -70 },
+{ typ: "Gut", mx: 107, my: -26, mz: -70 },
+{ typ: "Gut", mx: 107, my: -26, mz: -70 },
+{ typ: "Gut", mx: 107, my: -26, mz: -70 },
+{ typ: "Gut", mx: 107, my: -26, mz: -70 },
+{ typ: "Gut", mx: 107, my: -25, mz: -70 },
+{ typ: "Gut", mx: 107, my: -26, mz: -69 },
+{ typ: "Gut", mx: 107, my: -26, mz: -69 },
+{ typ: "Gut", mx: 107, my: -26, mz: -69 },
+{ typ: "Gut", mx: 108, my: -26, mz: -70 },
+{ typ: "Gut", mx: 108, my: -25, mz: -72 },
+{ typ: "Gut", mx: 107, my: -26, mz: -70 },
+{ typ: "Gut", mx: 4, my: -22, mz: -39 },
+{ typ: "Gut", mx: 1, my: -23, mz: -38 },
+{ typ: "Gut", mx: 1, my: -22, mz: -39 },
+{ typ: "Gut", mx: 3, my: -21, mz: -41 },
+{ typ: "Gut", mx: 3, my: -22, mz: -38 },
+{ typ: "Gut", mx: 5, my: -22, mz: -40 },
+{ typ: "Gut", mx: -2, my: -21, mz: -38 },
+{ typ: "Gut", mx: 1, my: -23, mz: -40 },
+{ typ: "Gut", mx: -5, my: -23, mz: -34 },
+{ typ: "Gut", mx: -3, my: -22, mz: -37 },
+{ typ: "Gut", mx: -3, my: -22, mz: -37 },
+{ typ: "Gut", mx: -1, my: -22, mz: -37 },
+{ typ: "Gut", mx: -1, my: -22, mz: -37 },
+{ typ: "Gut", mx: -6, my: -22, mz: -35 },
+{ typ: "Gut", mx: -6, my: -21, mz: -34 },
+{ typ: "Gut", mx: -5, my: -22, mz: -36 },
+{ typ: "Gut", mx: -4, my: -22, mz: -36 },
+{ typ: "Gut", mx: -4, my: -22, mz: -36 },
+{ typ: "Gut", mx: -5, my: -22, mz: -36 },
+{ typ: "Gut", mx: -3, my: -22, mz: -37 },
+{ typ: "Gut", mx: -4, my: -22, mz: -36 },
+{ typ: "Gut", mx: -4, my: -22, mz: -36 },
+{ typ: "Gut", mx: -2, my: -22, mz: -37 },
+{ typ: "Gut", mx: -4, my: -22, mz: -36 },
+{ typ: "Gut", mx: -5, my: -23, mz: -35 },
+{ typ: "Gut", mx: -5, my: -22, mz: -35 },
+{ typ: "Gut", mx: -5, my: -22, mz: -35 },
+{ typ: "Gut", mx: -5, my: -22, mz: -36 },
+{ typ: "Gut", mx: -5, my: -22, mz: -35 },
+{ typ: "Gut", mx: -5, my: -22, mz: -35 },
+{ typ: "Gut", mx: -5, my: -22, mz: -35 },
+{ typ: "Gut", mx: -4, my: -22, mz: -35 },
+{ typ: "Gut", mx: -4, my: -22, mz: -35 },
+{ typ: "Gut", mx: -4, my: -22, mz: -35 },
+{ typ: "Gut", mx: -4, my: -23, mz: -36 },
+{ typ: "Gut", mx: -4, my: -23, mz: -36 },
+{ typ: "Gut", mx: -4, my: -23, mz: -36 },
+{ typ: "Gut", mx: -4, my: -23, mz: -35 },
+{ typ: "Gut", mx: -4, my: -23, mz: -35 },
+{ typ: "Gut", mx: -4, my: -23, mz: -35 },
+{ typ: "Gut", mx: -4, my: -23, mz: -35 },
+{ typ: "Gut", mx: -4, my: -23, mz: -35 },
+{ typ: "Gut", mx: -4, my: -23, mz: -35 },
+{ typ: "Gut", mx: -4, my: -22, mz: -36 },
+{ typ: "Gut", mx: -7, my: -22, mz: -35 },
+{ typ: "Gut", mx: 1, my: -25, mz: -39 },
+{ typ: "Gut", mx: 0, my: -25, mz: -38 },
+{ typ: "Gut", mx: 2, my: -25, mz: -41 },
+{ typ: "Gut", mx: 3, my: -24, mz: -41 },
+{ typ: "Gut", mx: 3, my: -23, mz: -41 },
+{ typ: "Gut", mx: 104, my: -30, mz: -59 },
+{ typ: "Gut", mx: 104, my: -30, mz: -58 },
+{ typ: "Gut", mx: 104, my: -29, mz: -58 },
+{ typ: "Gut", mx: 104, my: -30, mz: -58 },
+{ typ: "Gut", mx: 104, my: -30, mz: -58 },
+{ typ: "Gut", mx: 105, my: -29, mz: -58 },
+{ typ: "Gut", mx: 104, my: -30, mz: -59 },
+{ typ: "Gut", mx: 105, my: -29, mz: -59 },
+{ typ: "Gut", mx: 105, my: -30, mz: -58 },
+{ typ: "Gut", mx: 104, my: -30, mz: -58 },
+{ typ: "Gut", mx: 104, my: -29, mz: -58 },
+{ typ: "Gut", mx: 104, my: -29, mz: -58 },
+{ typ: "Gut", mx: 104, my: -29, mz: -58 },
+{ typ: "Gut", mx: 104, my: -29, mz: -59 },
+{ typ: "Gut", mx: 104, my: -29, mz: -59 },
+{ typ: "Gut", mx: 104, my: -29, mz: -59 },
+{ typ: "Gut", mx: 104, my: -29, mz: -58 },
+{ typ: "Gut", mx: 103, my: -29, mz: -58 },
+{ typ: "Gut", mx: 103, my: -29, mz: -58 },
+{ typ: "Gut", mx: 92, my: -34, mz: -46 },
+{ typ: "Gut", mx: 92, my: -35, mz: -47 },
+{ typ: "Gut", mx: 92, my: -34, mz: -47 },
+{ typ: "Gut", mx: 92, my: -34, mz: -47 },
+{ typ: "Gut", mx: 92, my: -34, mz: -47 },
+{ typ: "Gut", mx: 92, my: -33, mz: -48 },
+{ typ: "Gut", mx: 92, my: -33, mz: -47 },
+{ typ: "Gut", mx: 92, my: -34, mz: -47 },
+{ typ: "Gut", mx: 92, my: -34, mz: -46 },
+{ typ: "Gut", mx: 92, my: -34, mz: -47 },
+{ typ: "Gut", mx: 33, my: -18, mz: -52 },
+{ typ: "Gut", mx: 34, my: -18, mz: -54 },
+{ typ: "Gut", mx: 33, my: -17, mz: -52 },
+{ typ: "Gut", mx: 34, my: -18, mz: -52 },
+{ typ: "Gut", mx: 33, my: -18, mz: -53 },
+{ typ: "Gut", mx: 37, my: -19, mz: -55 },
+{ typ: "Gut", mx: 31, my: -18, mz: -52 },
+{ typ: "Gut", mx: 32, my: -17, mz: -52 },
+{ typ: "Gut", mx: 30, my: -18, mz: -51 },
+{ typ: "Gut", mx: 32, my: -17, mz: -51 },
+{ typ: "Gut", mx: 31, my: -18, mz: -52 },
+{ typ: "Gut", mx: 31, my: -17, mz: -52 },
+{ typ: "Gut", mx: 31, my: -17, mz: -51 },
+{ typ: "Gut", mx: 31, my: -18, mz: -52 },
+{ typ: "Gut", mx: 30, my: -17, mz: -51 },
+{ typ: "Gut", mx: 30, my: -18, mz: -51 },
+{ typ: "Gut", mx: 31, my: -18, mz: -52 },
+{ typ: "NichtErkannt", mx: 0, my: 0, mz: 0 },
+{ typ: "NichtErkannt", mx: 0, my: -1, mz: -1 },
+{ typ: "NichtErkannt", mx: 1, my: 0, mz: -1 },
+{ typ: "NichtErkannt", mx: 0, my: 0, mz: 0 },
+{ typ: "NichtErkannt", mx: 88, my: -29, mz: -11 },
+{ typ: "NichtErkannt", mx: 87, my: -29, mz: -11 },
+{ typ: "NichtErkannt", mx: 86, my: -29, mz: -10 },
+{ typ: "NichtErkannt", mx: 91, my: -29, mz: -13 },
+{ typ: "NichtErkannt", mx: 91, my: -29, mz: -12 },
+{ typ: "NichtErkannt", mx: 90, my: -29, mz: -11 },
+{ typ: "NichtErkannt", mx: -2, my: 0, mz: -1 },
+{ typ: "NichtErkannt", mx: -2, my: -1, mz: 0 },
+{ typ: "NichtErkannt", mx: -2, my: -1, mz: 0 },
+{ typ: "NichtErkannt", mx: 55, my: -19, mz: -10 },
+{ typ: "NichtErkannt", mx: 56, my: -19, mz: -11 },
+{ typ: "NichtErkannt", mx: 56, my: -19, mz: -10 },
+{ typ: "NichtErkannt", mx: 55, my: -19, mz: -11 },
+{ typ: "NichtErkannt", mx: 55, my: -19, mz: -10 },
+{ typ: "Schlecht", mx: 55, my: -18, mz: -83 },
+{ typ: "Schlecht", mx: 55, my: -18, mz: -83 },
+{ typ: "Schlecht", mx: 54, my: -18, mz: -83 },
+{ typ: "Schlecht", mx: 8, my: -12, mz: -60 },
+{ typ: "Schlecht", mx: -26, my: -14, mz: -1 },
+{ typ: "Schlecht", mx: -17, my: -13, mz: -7 },
+{ typ: "Schlecht", mx: -7, my: -16, mz: -16 },
+{ typ: "Schlecht", mx: -6, my: -15, mz: -16 },
+{ typ: "Schlecht", mx: -6, my: -16, mz: -15 },
+{ typ: "Schlecht", mx: -6, my: -16, mz: -14 },
+{ typ: "Schlecht", mx: -3, my: -16, mz: -17 },
+{ typ: "Schlecht", mx: -3, my: -16, mz: -17 },
+{ typ: "Schlecht", mx: -2, my: -17, mz: -18 },
+{ typ: "Schlecht", mx: -3, my: -17, mz: -19 },
+{ typ: "Schlecht", mx: -2, my: -16, mz: -19 },
+{ typ: "Schlecht", mx: -2, my: -17, mz: -19 },
+{ typ: "Schlecht", mx: -2, my: -16, mz: -19 },
+{ typ: "Schlecht", mx: -17, my: -11, mz: -16 },
+{ typ: "Schlecht", mx: 22, my: -11, mz: -72 },
+{ typ: "Schlecht", mx: 78, my: -18, mz: -87 },
+{ typ: "Schlecht", mx: 85, my: -14, mz: -87 },
+{ typ: "Schlecht", mx: 80, my: -21, mz: -90 },
+{ typ: "Schlecht", mx: 79, my: -22, mz: -87 },
+{ typ: "Schlecht", mx: 78, my: -22, mz: -87 },
+{ typ: "Schlecht", mx: 80, my: -21, mz: -87 },
+{ typ: "Schlecht", mx: 80, my: -19, mz: -88 },
+{ typ: "Schlecht", mx: 82, my: -6, mz: -86 },
+{ typ: "Schlecht", mx: 78, my: -2, mz: -85 },
+{ typ: "Schlecht", mx: 57, my: 9, mz: -81 },
+{ typ: "Schlecht", mx: 18, my: 26, mz: -47 },
+{ typ: "Schlecht", mx: 22, my: 27, mz: -48 },
+{ typ: "Schlecht", mx: -2, my: 2, mz: -52 },
+{ typ: "Schlecht", mx: 53, my: -32, mz: -88 },
+{ typ: "Schlecht", mx: 75, my: -42, mz: -81 },
+{ typ: "Schlecht", mx: 73, my: -41, mz: -81 },
+{ typ: "Schlecht", mx: 73, my: -40, mz: -82 },
+{ typ: "Schlecht", mx: 72, my: -39, mz: -82 },
+{ typ: "Schlecht", mx: 72, my: -39, mz: -83 },
+{ typ: "Schlecht", mx: 72, my: -26, mz: -88 },
+{ typ: "Schlecht", mx: 67, my: -21, mz: -90 },
+{ typ: "Schlecht", mx: 52, my: -19, mz: -87 },
+{ typ: "Schlecht", mx: 32, my: -6, mz: -81 },
+{ typ: "Schlecht", mx: 69, my: -19, mz: -91 },
+{ typ: "Schlecht", mx: 63, my: -20, mz: -91 },
+{ typ: "Schlecht", mx: 59, my: -19, mz: -88 },
+{ typ: "Schlecht", mx: 65, my: -21, mz: -91 },
+{ typ: "Schlecht", mx: 63, my: -22, mz: -91 },
+{ typ: "Schlecht", mx: 63, my: -21, mz: -91 },
+{ typ: "Schlecht", mx: 63, my: -20, mz: -91 },
+{ typ: "Schlecht", mx: 65, my: -20, mz: -91 },
+{ typ: "Schlecht", mx: 101, my: -23, mz: -73 },
+{ typ: "Schlecht", mx: 101, my: -24, mz: -75 },
+{ typ: "Schlecht", mx: 100, my: -25, mz: -74 },
+{ typ: "Schlecht", mx: 100, my: -25, mz: -74 },
+{ typ: "Schlecht", mx: 100, my: -25, mz: -74 },
+{ typ: "Schlecht", mx: 100, my: -25, mz: -75 },
+{ typ: "Schlecht", mx: 99, my: -25, mz: -74 },
+{ typ: "Schlecht", mx: 99, my: -25, mz: -74 },
+{ typ: "Schlecht", mx: 99, my: -25, mz: -75 },
+{ typ: "Schlecht", mx: 99, my: -25, mz: -74 },
+{ typ: "Schlecht", mx: 99, my: -25, mz: -75 },
+{ typ: "Schlecht", mx: 99, my: -25, mz: -75 },
+{ typ: "Schlecht", mx: 99, my: -25, mz: -75 },
+{ typ: "Schlecht", mx: 98, my: -24, mz: -75 },
+{ typ: "Schlecht", mx: 85, my: -21, mz: -84 },
+{ typ: "Schlecht", mx: 66, my: -19, mz: -89 },
+{ typ: "Schlecht", mx: 67, my: -21, mz: -85 },
+{ typ: "Schlecht", mx: 67, my: -19, mz: -86 },
+{ typ: "Schlecht", mx: 68, my: -19, mz: -85 },
+{ typ: "Schlecht", mx: -43, my: -22, mz: 34 },
+{ typ: "Schlecht", mx: -43, my: -22, mz: 35 },
+{ typ: "Schlecht", mx: -43, my: -21, mz: 34 },
+{ typ: "Schlecht", mx: -44, my: -21, mz: 34 },
+{ typ: "Schlecht", mx: -44, my: -22, mz: 35 },
+{ typ: "Schlecht", mx: -44, my: -22, mz: 35 },
+{ typ: "Schlecht", mx: -43, my: -19, mz: 34 },
+{ typ: "Schlecht", mx: -41, my: -11, mz: 29 },
+{ typ: "Schlecht", mx: -41, my: -12, mz: 29 },
+{ typ: "Schlecht", mx: -44, my: -29, mz: 33 },
+{ typ: "Schlecht", mx: -40, my: -23, mz: 28 },
+{ typ: "Schlecht", mx: -37, my: -24, mz: 32 },
+{ typ: "Schlecht", mx: -35, my: -21, mz: 32 },
+{ typ: "Schlecht", mx: -35, my: -19, mz: 37 },
+{ typ: "Schlecht", mx: -40, my: -18, mz: 50 },
+{ typ: "Schlecht", mx: -39, my: -18, mz: 49 },
+{ typ: "Schlecht", mx: -40, my: -18, mz: 49 },
+{ typ: "Schlecht", mx: -39, my: -18, mz: 49 },
+{ typ: "Schlecht", mx: -39, my: -17, mz: 49 },
+{ typ: "Schlecht", mx: -39, my: -16, mz: 49 },
+{ typ: "Schlecht", mx: -39, my: -17, mz: 50 },
+{ typ: "Schlecht", mx: -40, my: -17, mz: 51 },
+{ typ: "Schlecht", mx: -40, my: -14, mz: 38 },
+{ typ: "Schlecht", mx: -36, my: -20, mz: 3 },
+{ typ: "Schlecht", mx: -11, my: -17, mz: -17 },
+{ typ: "Schlecht", mx: -21, my: -22, mz: -5 },
+{ typ: "Schlecht", mx: -23, my: -21, mz: -3 },
+{ typ: "Schlecht", mx: -23, my: -21, mz: -2 },
+{ typ: "Schlecht", mx: -24, my: -21, mz: -3 },
+{ typ: "Schlecht", mx: -24, my: -21, mz: -3 },
+{ typ: "Schlecht", mx: -24, my: -21, mz: -2 },
+{ typ: "Schlecht", mx: -24, my: -21, mz: -3 },
+{ typ: "Schlecht", mx: -24, my: -21, mz: -3 },
+{ typ: "Schlecht", mx: -24, my: -21, mz: -3 },
+{ typ: "Schlecht", mx: -24, my: -21, mz: -3 },
+{ typ: "Schlecht", mx: 13, my: -23, mz: -35 },
+{ typ: "Schlecht", mx: 26, my: -24, mz: -39 },
+{ typ: "Schlecht", mx: 20, my: -25, mz: -35 },
+{ typ: "Schlecht", mx: -8, my: -21, mz: -22 },
+{ typ: "Schlecht", mx: -17, my: -19, mz: -14 },
+{ typ: "Schlecht", mx: -18, my: -18, mz: -13 },
+{ typ: "Schlecht", mx: -18, my: -18, mz: -13 },
+{ typ: "Schlecht", mx: -17, my: -17, mz: -14 },
+{ typ: "Schlecht", mx: -20, my: -17, mz: -11 },
+{ typ: "Schlecht", mx: -23, my: -16, mz: -9 },
+{ typ: "Schlecht", mx: -24, my: -15, mz: -8 },
+{ typ: "Schlecht", mx: -24, my: -15, mz: -8 },
+{ typ: "Schlecht", mx: -23, my: -15, mz: -8 },
+{ typ: "Schlecht", mx: 60, my: -26, mz: -77 },
+{ typ: "Schlecht", mx: 61, my: -26, mz: -78 },
+{ typ: "Schlecht", mx: 64, my: -29, mz: -77 },
+{ typ: "Schlecht", mx: 63, my: -26, mz: -78 },
+{ typ: "Schlecht", mx: 63, my: -26, mz: -77 },
+{ typ: "Schlecht", mx: 63, my: -26, mz: -78 },
+{ typ: "Schlecht", mx: 63, my: -26, mz: -78 },
+{ typ: "Schlecht", mx: 62, my: -26, mz: -78 },
+{ typ: "Schlecht", mx: 62, my: -26, mz: -77 },
+{ typ: "Schlecht", mx: 62, my: -26, mz: -77 },
+{ typ: "Schlecht", mx: 62, my: -26, mz: -78 },
+{ typ: "Schlecht", mx: 62, my: -26, mz: -78 },
+{ typ: "Schlecht", mx: 62, my: -26, mz: -78 },
+{ typ: "Schlecht", mx: 62, my: -26, mz: -78 },
+{ typ: "Schlecht", mx: 49, my: -24, mz: -77 },
+{ typ: "Schlecht", mx: -11, my: -16, mz: -34 },
+{ typ: "Schlecht", mx: -21, my: -10, mz: -1 },
+{ typ: "Schlecht", mx: -21, my: -13, mz: 2 },
+{ typ: "Schlecht", mx: -21, my: -13, mz: 2 },
+{ typ: "Schlecht", mx: -21, my: -13, mz: 4 },
+{ typ: "Schlecht", mx: -23, my: -13, mz: 6 },
+{ typ: "Schlecht", mx: -23, my: -14, mz: 7 },
+{ typ: "Schlecht", mx: -24, my: -10, mz: 2 },
+{ typ: "Schlecht", mx: -24, my: 1, mz: -19 },
+{ typ: "Schlecht", mx: 14, my: -26, mz: -60 },
+{ typ: "Schlecht", mx: 62, my: -29, mz: -79 },
+{ typ: "Schlecht", mx: 97, my: -30, mz: -60 },
+{ typ: "Schlecht", mx: 97, my: -31, mz: -60 },
+{ typ: "Schlecht", mx: 97, my: -29, mz: -61 },
+{ typ: "Schlecht", mx: 96, my: -28, mz: -61 },
+{ typ: "Schlecht", mx: 96, my: -30, mz: -61 },
+{ typ: "Schlecht", mx: 93, my: -29, mz: -63 },
+{ typ: "Schlecht", mx: 85, my: -27, mz: -72 },
+{ typ: "Schlecht", mx: 80, my: -26, mz: -73 },
+{ typ: "Schlecht", mx: 100, my: -29, mz: -55 },
+{ typ: "Schlecht", mx: 99, my: -26, mz: -56 },
+{ typ: "Schlecht", mx: 98, my: -28, mz: -57 },
+{ typ: "Schlecht", mx: 97, my: -28, mz: -57 },
+{ typ: "Schlecht", mx: 98, my: -25, mz: -58 },
+{ typ: "Schlecht", mx: 97, my: -27, mz: -58 },
+{ typ: "Schlecht", mx: 98, my: -26, mz: -58 },
+{ typ: "Schlecht", mx: 97, my: -25, mz: -59 },
+{ typ: "Schlecht", mx: 78, my: -29, mz: -65 },
+{ typ: "Schlecht", mx: 80, my: -30, mz: -65 },
+{ typ: "Schlecht", mx: 81, my: -30, mz: -66 },
+{ typ: "Schlecht", mx: 80, my: -28, mz: -63 },
+{ typ: "Schlecht", mx: 80, my: -28, mz: -63 },
+{ typ: "Schlecht", mx: 88, my: -29, mz: -54 },
+{ typ: "Schlecht", mx: 91, my: -30, mz: -50 },
+{ typ: "Schlecht", mx: 90, my: -30, mz: -47 },
+{ typ: "Schlecht", mx: 91, my: -30, mz: -47 },
+{ typ: "Schlecht", mx: 91, my: -29, mz: -48 },
+{ typ: "Schlecht", mx: 86, my: -29, mz: -57 },
+{ typ: "Schlecht", mx: 78, my: -27, mz: -70 },
+{ typ: "Schlecht", mx: 68, my: -25, mz: -72 },
+{ typ: "Schlecht", mx: 36, my: -19, mz: -68 },
+{ typ: "Schlecht", mx: 47, my: -20, mz: -68 },
+{ typ: "Schlecht", mx: 47, my: -19, mz: -68 },
+{ typ: "Schlecht", mx: 46, my: -20, mz: -68 },
+{ typ: "Schlecht", mx: 46, my: -19, mz: -67 },
+{ typ: "Schlecht", mx: 47, my: -19, mz: -67 },
+{ typ: "Schlecht", mx: -20, my: -13, mz: -17 },
+{ typ: "Schlecht", mx: -19, my: -9, mz: -2 },
+{ typ: "Schlecht", mx: -18, my: -8, mz: -2 },
+{ typ: "Schlecht", mx: -18, my: -9, mz: -1 },
+{ typ: "Schlecht", mx: -18, my: -9, mz: -1 },
+{ typ: "Schlecht", mx: -17, my: -9, mz: -1 },
+{ typ: "Schlecht", mx: -17, my: -10, mz: -1 },
+{ typ: "Schlecht", mx: -18, my: -10, mz: 2 },
+{ typ: "Schlecht", mx: -20, my: -10, mz: 4 },
+{ typ: "Schlecht", mx: -13, my: -11, mz: -3 },
+{ typ: "Schlecht", mx: -11, my: -13, mz: -1 },
+{ typ: "Schlecht", mx: -11, my: -13, mz: -1 },
+{ typ: "Schlecht", mx: -10, my: -13, mz: -1 },
+{ typ: "Schlecht", mx: -11, my: -13, mz: -2 },
+{ typ: "Schlecht", mx: -11, my: -13, mz: -2 },
+{ typ: "Schlecht", mx: -11, my: -13, mz: -2 },
+{ typ: "Schlecht", mx: -10, my: -13, mz: -2 },
+{ typ: "Schlecht", mx: -10, my: -13, mz: -2 },
+{ typ: "Schlecht", mx: -10, my: -14, mz: -2 },
+{ typ: "Schlecht", mx: -10, my: -13, mz: -2 },
+{ typ: "Schlecht", mx: -10, my: -13, mz: -3 },
+{ typ: "Schlecht", mx: -10, my: -13, mz: -3 },
+{ typ: "Schlecht", mx: -11, my: -12, mz: -3 },
+{ typ: "Schlecht", mx: 64, my: -23, mz: -68 },
+{ typ: "Schlecht", mx: 72, my: -23, mz: -67 },
+{ typ: "Schlecht", mx: 68, my: -22, mz: -68 },
+{ typ: "Schlecht", mx: 70, my: -27, mz: -71 },
+{ typ: "Schlecht", mx: 63, my: -23, mz: -69 },
+{ typ: "Schlecht", mx: 63, my: -22, mz: -69 },
+{ typ: "Schlecht", mx: 63, my: -22, mz: -70 },
+{ typ: "Schlecht", mx: -2, my: -16, mz: -13 },
+{ typ: "Schlecht", mx: 1, my: -16, mz: -18 },
+{ typ: "Schlecht", mx: 0, my: -12, mz: -18 },
+{ typ: "Schlecht", mx: -2, my: -12, mz: -16 },
+{ typ: "Schlecht", mx: -2, my: -12, mz: -16 },
+{ typ: "Schlecht", mx: -1, my: -11, mz: -15 },
+{ typ: "Schlecht", mx: -1, my: -11, mz: -16 },
+{ typ: "Schlecht", mx: -2, my: -11, mz: -15 },
+{ typ: "Schlecht", mx: 4, my: -13, mz: -23 },
+{ typ: "Schlecht", mx: -1, my: -8, mz: -19 },
+{ typ: "Schlecht", mx: 0, my: -9, mz: -19 },
+{ typ: "Schlecht", mx: 10, my: -12, mz: -35 },
+{ typ: "Schlecht", mx: 41, my: -20, mz: -57 },
+{ typ: "Schlecht", mx: 40, my: -19, mz: -57 },
+{ typ: "Schlecht", mx: 38, my: -20, mz: -56 },
+{ typ: "Schlecht", mx: 35, my: -20, mz: -53 },
+{ typ: "Schlecht", mx: 41, my: -18, mz: -57 },
+{ typ: "Schlecht", mx: 42, my: -18, mz: -58 },
+{ typ: "Schlecht", mx: 39, my: -18, mz: -55 },
+{ typ: "Schlecht", mx: 16, my: -14, mz: -33 },
+{ typ: "Schlecht", mx: 13, my: -14, mz: -30 },
+{ typ: "Schlecht", mx: 11, my: -14, mz: -29 },
+{ typ: "Schlecht", mx: 10, my: -14, mz: -26 },
+{ typ: "Schlecht", mx: 4, my: -8, mz: -21 },
+{ typ: "Schlecht", mx: -12, my: -9, mz: -5 },
+{ typ: "Schlecht", mx: -8, my: -9, mz: -12 },
+{ typ: "Schlecht", mx: -8, my: -7, mz: -11 },
+{ typ: "Schlecht", mx: -7, my: -8, mz: -11 },
+{ typ: "Schlecht", mx: -7, my: -8, mz: -10 },
+{ typ: "Schlecht", mx: -7, my: -8, mz: -10 },
+{ typ: "Schlecht", mx: -33, my: -3, mz: 36 },
+{ typ: "Schlecht", mx: -36, my: -2, mz: 39 },
+{ typ: "Schlecht", mx: -36, my: -1, mz: 41 },
+{ typ: "Schlecht", mx: -36, my: -1, mz: 41 },
+{ typ: "Schlecht", mx: -37, my: -1, mz: 43 },
+{ typ: "Schlecht", mx: -36, my: -1, mz: 39 },
+{ typ: "Schlecht", mx: -36, my: -1, mz: 39 }
 ];
 
 // Funktion zum Ermitteln der nächsten Punktklassifizierung
@@ -307,11 +749,13 @@ function findeNaechstenPunkt(sensorData) {
     calibratedMz: calibratedMzValue
   });
 
+
   // Hintergrundfarbe basierend auf dem nächsten Punkttyp setzen
   if (nextPointType === "Gut") {
     document.body.style.backgroundColor = '#77b09f'; // Hintergrund grün
     document.querySelector('h1').textContent = 'Very good';
     NoteStatus = 1;
+    showNotification('Very good');
   } else if (nextPointType === "NichtErkannt") {
     document.body.style.backgroundColor = '#f0f0f0'; // Hintergrund grau
     document.querySelector('h1').textContent = 'Nothing detected';
@@ -320,42 +764,7 @@ function findeNaechstenPunkt(sensorData) {
     document.body.style.backgroundColor = '#f39ea1'; // Hintergrund rot
     document.querySelector('h1').textContent = 'Straighten up';
     NoteStatus = 3;
-  }
-  }
-
-// Funktion zur Anzeige einer Webbenachrichtigung
-function showNotification(message) {
-  // Überprüfen, ob Webbenachrichtigungen vom Browser unterstützt werden
-  if ('Notification' in window) {
-    // Überprüfen, ob die Berechtigung für Benachrichtigungen bereits erteilt wurde
-    if (Notification.permission === 'granted') {
-      // Erstellen und Anzeigen der Benachrichtigung
-      new Notification(message);
-    } else if (Notification.permission !== 'denied') {
-      // Aufforderung zur Berechtigungserteilung für Benachrichtigungen
-      Notification.requestPermission().then(function (permission) {
-        if (permission === 'granted') {
-          // Berechtigung erteilt, Benachrichtigung anzeigen
-          new Notification(message);
-        }
-      });
-    }
-  }
-}
-
-function checkNoteStatusChange() {
-  if (NoteStatus !== previousNoteStatus) {
-    // Der Wert von NoteStatus hat sich geändert
-    if (NoteStatus === 1) {
-      // Zeige eine Benachrichtigung für Status 1
-      showNotification('Perfect sitting ');
-    } else if (NoteStatus === 2) {
-      // Zeige eine Benachrichtigung für Status 2
-      showNotification('Not so good, straighten up');
-    }
-    
-    // Aktualisiere previousNoteStatus
-    previousNoteStatus = NoteStatus;
+    showNotification('Straighten up');
   }
 }
   
